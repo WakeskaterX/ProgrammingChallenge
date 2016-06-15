@@ -1,5 +1,12 @@
 import React from 'react';
 
+let DIRECTION_MAP = {
+    'U': 'arrow-up',
+    'R': 'arrow-right',
+    'L': 'arrow-left',
+    'D': 'arrow-down',
+    '': ''
+}
 
 //this exports a reference to a React class as the default export
 export default React.createClass({
@@ -25,9 +32,13 @@ export default React.createClass({
             height: this.props.size,
             backgroundColor: this.props.color
         };
+
+        let direction = this.props.direction || '';
+
+        let class_name = 'square ' + DIRECTION_MAP[direction];
         //To set a div's class in React you must use the 'className' attribute, instead of the
         //usual 'class' attribute. This is because 'class' is a reserved keyword in ECMAScript 6.
-        return <div className='square' ref='square' style={style}/>
+        return <div className={class_name} ref='square' style={style}/>
     },
 
     /**
