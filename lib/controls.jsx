@@ -49,25 +49,32 @@ export default React.createClass({
     },
 
     /**
-     *
+     * Sets the size of the board
      */
     onSetSize() {
         this.state.audio_click.play();
         this.props.control.setSize(this.state.size);
     },
 
+    /**
+     * Runs the currently selected algorithm and step rate
+     */
     onPlay() {
         this.state.audio_click.play();
         this.props.control.play(this.state.algorithm, this.state.step_rate);
     },
 
-
+    /**
+     * Stops the currently running visualization
+     */
     onStop() {
         this.state.audio_click.play();
         this.props.control.stop();
     },
 
-
+    /**
+     * Resets the checker position (but not the board state)
+     */
     onReset() {
         this.state.audio_click.play();
         this.props.control.reset();

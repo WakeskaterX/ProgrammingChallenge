@@ -237,6 +237,9 @@ function drawRect(ctx, x, y, width, color) {
   ctx.fill();
 }
 
+/**
+ * Draws the currently viewed location
+ */
 function drawCurrent(ctx, x, y, width) {
   ctx.beginPath();
   ctx.strokeStyle = "rgba(0, 255, 0, 1)";
