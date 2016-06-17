@@ -1,7 +1,7 @@
 //all import statements must go at the top of the file.
 import React from 'react';
-import Board from './example-board';
-import Controls from './example-controls';
+import Board from './board';
+import Controls from './controls';
 
 //get the content DOMElemet create in index.html
 let content = document.getElementById('content');
@@ -23,7 +23,7 @@ let Main = React.createClass({
         return (
             <div id="game">
                 <Controls control={this}/>
-                <Board size={this.state.size} squareSize={this.state.squareSize} boardValues={this.state.boardValues} checkerLocation={this.state.checkerLocation}/>
+                <Board size={this.state.size} squareSize={this.state.squareSize} boardValues={this.state.boardValues} checkerLocation={this.state.checkerLocation} ref={'board'}/>
             </div>
         );
     },
@@ -34,29 +34,27 @@ let Main = React.createClass({
      * @param {string} algorithm_name
      */
     play(algorithm_name, step_rate) {
-        this.state.checkerLocation = generateChecker(this.state.size);
-        //Update the Checker - Render on the Overlay & Start the Selected Algorithm
+        //Render on the Overlay & Start the Selected Algorithm
         console.log(`Running ${algorithm_name} as the Algorithm with ${step_rate}ms between each step!`);
+        this.refs.board.load(algorithm_name, step_rate, this.state.checkerLocation, this.state.boardValues);
     },
 
     stop() {
-        console.log("Stop");
+        this.refs.board.stop();
     },
 
     reset() {
         this.state.checkerLocation = generateChecker(this.state.size);
+        this.refs.board.stop();
         this.setState(this.state);
     },
 
     setSize(value) {
-        //we update our internal state.
+        //Set the Size of the Board, the Values for the Board (generate new) and a fresh Checker Location
         this.state.size = parseInt(value, 10);
         this.state.boardValues = generateBoard(this.state.size);
         this.state.checkerLocation = generateChecker(this.state.size);
         this.state.boardWidth = this.state.size * this.state.squareSize;
-        //setting our state forces a rerender, which in turn will call the render() method
-        //of this class. This is how everything gets redrawn and how you 'react' to user input
-        //to change the state of the DOM.
         this.setState(this.state);
 
     }
@@ -102,8 +100,9 @@ function getRandomDirection() {
     return directions[Math.floor(Math.random() * 4)];
 }
 
-//this is the entry point into react. From here on out we deal almost exclusively with the
-//virtual DOM. Here we tell React to attach everything to the content DOM element.
+/**
+ * Render to the Virtual Dom - Main Entry Point
+ */
 React.render(<Main squareSize={80} size={5} boardWidth={400}/>, content, () => {
     console.log("Rendered!");
 });

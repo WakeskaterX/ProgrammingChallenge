@@ -1,25 +1,25 @@
 import React from 'react';
-//this syntax is called object destructing.
 import {Button, ButtonToolbar} from 'react-bootstrap'
 
 export default React.createClass({
     getInitialState() {
         return {
             size: this.props.control.state.size,
-            algorithm: 'algorithm_1',
-            step_rate: 10
+            algorithm: 'algorithm_solve_for_checker',
+            step_rate: 500,
+            audio_click: new Audio('./audio/click.mp3')
         };
     },
 
     render() {
         return <ButtonToolbar>
-            <Button bsStyle="success" onClick={this.onPlay}>Run</Button> Algorithm:
+            <Button bsStyle="success" onClick={this.onPlay}>Run</Button>&nbsp;&nbsp;&nbsp;Algorithm:
             <select name="select_algorithm" id="select_algorithm" onChange={this.updateLocalAlgorithm}>
-                <option value="algorithm_1">Algorithm 1</option>
+                <option value="algorithm_solve_for_checker">Solve For Just Checker</option>
                 <option value="algorithm_solve_board">Solve Entire Board</option>
             </select> With time per step (ms):
-            <input type="number" min="0" max="100" defaultValue="10" onChange={this.updateLocalStepRate}/>
-            <Button bsStyle="danger" onClick={this.onStop}>Stop</Button><br/>
+            <input type="number" min="0" max="5000" defaultValue="500" onChange={this.updateLocalStepRate}/>
+            <Button id="stop" bsStyle="danger" onClick={this.onStop}>Stop</Button><br/>
             <Button bsStyle="primary" onClick={this.onReset}>Reset Checker Position</Button>
             <label htmlFor="boardSize">Board Size: </label>
             <input id="boardSize" type="number" onChange={this.updateLocalSize} />
@@ -27,33 +27,49 @@ export default React.createClass({
         </ButtonToolbar>
     },
 
+    /**
+     * Updates the size of the board when the value in the input is changed
+     */
     updateLocalSize(e) {
         this.state.size = e.target.value;
     },
 
+    /**
+     * updates the local step rate of the algorithm when the input is changed
+     */
     updateLocalStepRate(e) {
         this.state.step_rate = e.target.value;
     },
 
+    /**
+     * Updates the local algorithm name when selected
+     */
     updateLocalAlgorithm(e) {
         this.state.algorithm = e.target.value;
     },
 
+    /**
+     *
+     */
     onSetSize() {
+        this.state.audio_click.play();
         this.props.control.setSize(this.state.size);
     },
 
     onPlay() {
+        this.state.audio_click.play();
         this.props.control.play(this.state.algorithm, this.state.step_rate);
     },
 
 
     onStop() {
+        this.state.audio_click.play();
         this.props.control.stop();
     },
 
 
     onReset() {
+        this.state.audio_click.play();
         this.props.control.reset();
     }
 });

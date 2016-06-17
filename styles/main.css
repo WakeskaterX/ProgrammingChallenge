@@ -3,6 +3,10 @@
     height: 100%;
 }
 
+#stop {
+    margin-left: 1.9em;
+}
+
 .square {
     border: 1px solid #777777;
     float: left;

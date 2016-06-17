@@ -1,6 +1,5 @@
 import React from 'react';
-//notice we use the relative path syntax when loading local files
-import Square from './example-square'
+import Square from './square'
 import BoardOverlay from './overlay'
 import {remote} from 'electron'
 
@@ -22,7 +21,7 @@ export default React.createClass({
 
         //set the max size to the smaller of either the height or width of the screen less 20px for the buttons
         let window_size = remote.getCurrentWindow().getSize();
-        let max_width = Math.min(window_size[0], window_size[1] - 80);
+        let max_width = Math.min(window_size[0], window_size[1] - 160);
         let min_square_size = 12;
 
         this.state.squareSize = Math.max(Math.floor(max_width / this.props.size), min_square_size);
@@ -46,7 +45,24 @@ export default React.createClass({
 
         return <div style={style}>
             {squares}
-            <BoardOverlay squareSize={this.state.squareSize} boardValues={this.state.boardValues} boardWidth={this.state.boardWidth} checkerLocation={this.state.checkerLocation}/>
+            <BoardOverlay squareSize={this.state.squareSize} size={this.state.size} boardValues={this.state.boardValues} boardWidth={this.state.boardWidth} checkerLocation={this.state.checkerLocation} ref={'overlay'}/>
         </div>;
+    },
+
+    //These Functions just pass on the request to the overlay
+    load(algorithm_name, steps, checker_location, board_values) {
+        this.refs.overlay.loadAlgorithm(algorithm_name, steps, checker_location, board_values);
+    },
+
+    run() {
+        this.refs.overlay.run();
+    },
+
+    pause() {
+        this.refs.overlay.pause();
+    },
+
+    stop() {
+        this.refs.overlay.stop();
     }
 });
