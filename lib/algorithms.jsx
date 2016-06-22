@@ -46,11 +46,11 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
   let active = root;
 
   //Setup the four quadrants
-  //the child at 0,0 is the root
-  root.children('0,0') = root;
-  root.children('0,1') = new Node(-1, 0);
-  root.children('1,0') = new Node(0, -1);
-  root.children('1,1') = new Node(-1, -1);
+  //the child at 0 - (0,0) is the root
+  root.children('0') = root;
+  root.children('1') = new Node(-1, 0);
+  root.children('2') = new Node(0, -1);
+  root.children('3') = new Node(-1, -1);
 
   root.visit();
   number_moves++;
@@ -82,16 +82,13 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     let key_to_check = getKey(curr_loc.x, curr_loc.y);
     let depth = 0;
 
-    //Set up the Max depth for this key and get the keyx and keyy
-    let key_x = key_to_check.split(',')[0];
-    let key_y = key_to_check.split(',')[1];
-    let max_depth = key_x.length();
+    let max_depth = key_to_check.length();
 
     //Create a link to active so we can traverse the tree without changing what active is pointing to
     let check_node = active;
     while(!done) {
       //Traverse Each depth level - get the key for this depth level
-      var depth_key = key_x.substr(depth, 1) + "," + key_y.substr(depth, 1);
+      var depth_key = key_to_check.substr(0, 1);
       if (check_node.children[depth_key]) {
         check_node = check_node.children[depth_key];
         depth++;
@@ -100,7 +97,8 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
           y: check_node.y
         }
 
-        if (check_node.key === key_to_check && depth === max_depth) {
+        //If the key matches - this is the target node
+        if (check_node.key === key_to_check) {
           target_node = check_node;
           exists = true;
           done = true;

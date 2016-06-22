@@ -33,10 +33,10 @@ if (y < 0) {
   }
 
   for(let i = 0; i < maxDepth; i++) {
-    result += parseInt()
+    result += parseInt(xKey.substr(i,1) + yKey.substr(i,1), 2).toString(4);
   }
 
-  return
+  return result;
 }
 
 function getDepth(value) {
