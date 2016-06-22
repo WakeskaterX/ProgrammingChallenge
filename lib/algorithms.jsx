@@ -1,4 +1,5 @@
-import {rotateDirection, getDir, getRingDistance, getDistance} from './helper';
+import {getKey, getValuesFromKey, getDepth} from './helper';
+import {Node} from './tree_node';
 
 module.exports = {
   'algorithm_solve_for_checker': solveChecker2
@@ -47,17 +48,17 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
 
   //Setup the four quadrants
   //the child at 0 - (0,0) is the root
-  root.children('0') = root;
-  root.children('1') = new Node(-1, 0);
-  root.children('2') = new Node(0, -1);
-  root.children('3') = new Node(-1, -1);
+  active.children['0'] = root;
+  active.children['1'] = new Node(-1, 0);
+  active.children['2'] = new Node(0, -1);
+  active.children['3'] = new Node(-1, -1);
 
-  root.visit();
+  active.visit();
   number_moves++;
 
   yield {
-    x: abs_loc.x,
-    y: abs_loc.y,
+    x: curr_loc.x,
+    y: curr_loc.y,
     value: 'X' //Root has been visited
   };
 
@@ -69,12 +70,16 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     curr_loc.x += move.x;
     curr_loc.y += move.y;
 
-    abs_loc.x = curr_loc.x + checker_loc.x;
-    abs_loc.y = curr_loc.y + checker_loc.y;
+    abs_loc.x = curr_loc.x + checker.x;
+    abs_loc.y = curr_loc.y + checker.y;
 
     //Do a check to see if the new location to move to is off the board, if so we win!
     if (isOffBoard(abs_loc, size)) {
-      //finish(); TODO
+      yield {
+        completed: true,
+        status: 'success',
+        description: `Checker exited the board in ${number_moves} moves!`
+      }
     }
 
     //Traverse Tree to see if node exists
@@ -82,7 +87,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     let key_to_check = getKey(curr_loc.x, curr_loc.y);
     let depth = 0;
 
-    let max_depth = key_to_check.length();
+    let max_depth = key_to_check.length;
 
     //Create a link to active so we can traverse the tree without changing what active is pointing to
     let check_node = active;
@@ -92,6 +97,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
       if (check_node.children[depth_key]) {
         check_node = check_node.children[depth_key];
         depth++;
+        number_moves++;
         yield {
           x: check_node.x,
           y: check_node.y
@@ -115,7 +121,12 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     //If the node exists, check to see if it's visited - if so, finish
     if (exists) {
       if (target_node.visited) {
-        //FINISH //todo
+        number_moves++;
+        yield {
+          completed: true,
+          status: 'failure',
+          description: `Path intercepted itself in  ${number_moves} moves!`
+        }
       } else {
         //Link target_node to active node and set to visited
         active.neighbors[dir] = target_node;
@@ -139,15 +150,54 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
       while (!inserted) {
         //Start at the Root and Check
         let curr_key = node_to_insert.key.substr(current_depth, 1);
+        console.log("Checking the current key", curr_key, " against ", node_to_insert.key);
         //If the currently checked node doesn't have a child with the current key value, lets add a node
         if (!check_node.children[curr_key]) {
-          if (current_depth === node_to_insert.key.length) {
+          if (current_depth === node_to_insert.key.length - 1) {
             //If the current depth is equal to the key length, this is the final node, so insert the node to insert
             check_node.children[curr_key] = node_to_insert;
             inserted = true;
+          } else {
+            let partial_key = node_to_insert.key.substr(0, current_depth + 2);
+            let new_val = getValuesFromKey(partial_key);
+            let new_child = new Node(new_val.x, new_val.y);
+            check_node.children[curr_key] = new_child;
+            new_child.parent = check_node;
+
+            //Set the Check node to the new child and enter that node
+            check_node = new_child;
+            current_depth++;
+            number_moves++;
+            yield { //non-visited node
+              x: check_node.x,
+              y: check_node.y,
+              value: "O"
+            };
+          }
+        } else {
+          console.log("Updating Check Node");
+          //Otherwise if it does have a node, set the check node to that node and continue
+          check_node = check_node.children[curr_key];
+          console.log(check_node);
+          current_depth++;
+          number_moves++;
+          yield {
+            x: check_node.x,
+            y: check_node.y
           }
         }
       }
+
+      active.neighbors[dir] = node_to_insert;
+      node_to_insert.neighbors[swapDirection(dir)] = active;
+      node_to_insert.visit();
+      active = node_to_insert;
+      number_moves++;
+      yield {
+        x: active.x,
+        y: active.y,
+        value: 'X'
+      };
     }
   }
 }

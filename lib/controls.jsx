@@ -15,8 +15,7 @@ export default React.createClass({
         return <ButtonToolbar>
             <Button bsStyle="success" onClick={this.onPlay}>Run</Button>&nbsp;&nbsp;&nbsp;Algorithm:
             <select name="select_algorithm" id="select_algorithm" onChange={this.updateLocalAlgorithm}>
-                <option value="algorithm_solve_for_checker">Solve For Just Checker</option>
-                <option value="algorithm_solve_board">Solve Entire Board</option>
+                <option value="algorithm_solve_for_checker">Solve For Checker</option>
             </select> With time per step (ms):
             <input type="number" min="0" max="5000" defaultValue="500" onChange={this.updateLocalStepRate}/>
             <Button id="stop" bsStyle="danger" onClick={this.onStop}>Stop</Button><br/>

@@ -33,6 +33,8 @@ export default React.createClass({
       solveState: STATE.WAITING,
       shouldReset: false,
       currentTimeout: null,
+      visitedLocations: [],
+      nonvisitedLocations: [],
       audio_gong: new Audio('./audio/gong.mp3')
     };
   },
@@ -96,17 +98,13 @@ export default React.createClass({
       context.fillStyle = "#F00";
       drawCircle(context, this.state.checkerLocation.x, this.state.checkerLocation.y, this.state.squareSize);
 
-      // for (let i = 0; i < boardSize; i++) {
-      //   for (let j = 0; j < boardSize; j++) {
-      //     if (this.state.boardValues[i][j][0] === 'O') {
-      //       drawRect(context, j, i, this.state.squareSize, o_color);
-      //     }
-      //     if (this.state.boardValues[i][j] === 'X') {
-      //       drawRect(context, j, i, this.state.squareSize, x_color);
-      //     }
-      //   }
-      // }
+      this.state.visitedLocations.forEach(function(loc) {
+        drawRect(context, loc.x, loc.y, this.state.squareSize, x_color);
+      }, this);
 
+      this.state.nonvisitedLocations.forEach(function(loc) {
+        drawRect(context, loc.x, loc.y, this.state.squareSize, o_color);
+      }, this);
 
       if (this.state.solveState === STATE.ACTIVE) {
         drawCurrent(context, this.state.currentLoc.x, this.state.currentLoc.y, this.state.squareSize);
@@ -124,17 +122,11 @@ export default React.createClass({
   loadAlgorithm(algorithm_name, step_time, checker_location, board_values) {
     //Stop all activities first before restarting
     this.stop();
-    //If values changed or we changed the algorithm (or if the algorithm is solve for checker)
-    //make a copy of the values each time we load an algorithm so we clear what we currently have set
-    if (arrayIsEqual2D(this.state.boardValues, board_values) || (this.state.algorithmName !== algorithm_name) || algorithm_name === "algorithm_solve_for_checker") {
-      this.state.boardValues = copy2DArray(board_values);
-      this.state.algorithmName = algorithm_name;
-    }
 
     //Update the checker location, step_time, algorithm generator and solveState
     this.state.checkerLocation = checker_location;
     this.state.step_time = step_time;
-    this.state.algorithm = algorithms[algorithm_name](this.state.boardValues, this.state.checkerLocation, this.state.size, this.state.shouldReset);
+    this.state.algorithm = algorithms[algorithm_name](this.state.boardValues, this.state.checkerLocation, this.state.size);
     this.state.solveState = STATE.ACTIVE;
     this.run();
   },
@@ -144,7 +136,10 @@ export default React.createClass({
    */
   run() {
     //Get the result back from the algorithm
+    console.log("ALGORITHM: ");
     let result = this.state.algorithm.next().value;
+    let checker = this.state.checkerLocation;
+    console.log(result);
 
     if (result.completed) {
       //Finish
@@ -153,11 +148,24 @@ export default React.createClass({
     } else {
       //Set the State of the value (X or O#) if value is set
       if (result.value) {
-        this.state.boardValues[result.y][result.x] = result.value;
+        if (result.value === "O") {
+          this.state.nonvisitedLocations.push({
+            x: result.x + checker.x,
+            y: result.y + checker.y
+          })
+        } else if (result.value === "X") {
+          this.state.visitedLocations.push({
+            x: result.x + checker.x,
+            y: result.y + checker.y
+          });
+        }
       }
 
       //Set the current location being checked with curr.x and curr.y
-      this.state.currentLoc = result.curr;
+      this.state.currentLoc = {
+        x: result.x,
+        y: result.y
+      };
     }
     this.drawCanvas();
 

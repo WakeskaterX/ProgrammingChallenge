@@ -44,7 +44,7 @@ function getValuesFromKey(key) {
   var xKey = "";
   var yKey = "";
 
-  key.trim().split('').forEach(function(base4num) {
+  key.split('').forEach(function(base4num) {
     let bin_string = padString((parseInt(base4num, 4).toString(2)), 2);
     xKey += bin_string[0];
     yKey += bin_string[1];
