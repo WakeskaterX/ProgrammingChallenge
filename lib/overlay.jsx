@@ -69,13 +69,6 @@ export default React.createClass({
   componentDidUpdate(prevProps) {
     this.state.size = this.props.size;
 
-    //Reset the board if updated
-    if (!arrayIsEqual2D(prevProps.boardValues, this.props.boardValues)) {
-      this.state.shouldReset = true;
-      //Make a copy of the array so we don't mutate the original when we make multiple runs
-      this.state.boardValues = copy2DArray(this.props.boardValues);
-    }
-
     this.state.checkerLocation = this.props.checkerLocation;
     this.state.squareSize = this.props.squareSize;
 
@@ -103,16 +96,17 @@ export default React.createClass({
       context.fillStyle = "#F00";
       drawCircle(context, this.state.checkerLocation.x, this.state.checkerLocation.y, this.state.squareSize);
 
-      for (let i = 0; i < boardSize; i++) {
-        for (let j = 0; j < boardSize; j++) {
-          if (this.state.boardValues[i][j][0] === 'O') {
-            drawRect(context, j, i, this.state.squareSize, o_color);
-          }
-          if (this.state.boardValues[i][j] === 'X') {
-            drawRect(context, j, i, this.state.squareSize, x_color);
-          }
-        }
-      }
+      // for (let i = 0; i < boardSize; i++) {
+      //   for (let j = 0; j < boardSize; j++) {
+      //     if (this.state.boardValues[i][j][0] === 'O') {
+      //       drawRect(context, j, i, this.state.squareSize, o_color);
+      //     }
+      //     if (this.state.boardValues[i][j] === 'X') {
+      //       drawRect(context, j, i, this.state.squareSize, x_color);
+      //     }
+      //   }
+      // }
+
 
       if (this.state.solveState === STATE.ACTIVE) {
         drawCurrent(context, this.state.currentLoc.x, this.state.currentLoc.y, this.state.squareSize);
