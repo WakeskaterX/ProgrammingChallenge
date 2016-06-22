@@ -2,6 +2,7 @@
 
 module.exports = {
   getKey,
+  getValuesFromKey,
   getDepth,
   padString,
   invertBinaryString
@@ -37,6 +38,22 @@ if (y < 0) {
   }
 
   return result;
+}
+
+function getValuesFromKey(key) {
+  var xKey = "";
+  var yKey = "";
+
+  key.trim().split('').forEach(function(base4num) {
+    let bin_string = padString((parseInt(base4num, 4).toString(2)), 2);
+    xKey += bin_string[0];
+    yKey += bin_string[1];
+  });
+
+  var x = xKey[0] === "1" ? ~parseInt(invertBinaryString(xKey), 2) : parseInt(xKey, 2);
+  var y = yKey[0] === "1" ? ~parseInt(invertBinaryString(yKey), 2) : parseInt(yKey, 2);
+
+  return { x, y };
 }
 
 function getDepth(value) {

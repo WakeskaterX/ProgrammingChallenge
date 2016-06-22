@@ -134,10 +134,19 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
       //Create a new NODE and set as active
       let inserted = false;
       let node_to_insert = new Node(curr_loc.x, curr_loc.y);
-      let insert_key_x = node_to_insert.key.split(',')[0];
-      let insert_key_y = node_to_insert.key.split(',')[1];
+      let current_depth = 0;
+      let check_node = root;
       while (!inserted) {
-
+        //Start at the Root and Check
+        let curr_key = node_to_insert.key.substr(current_depth, 1);
+        //If the currently checked node doesn't have a child with the current key value, lets add a node
+        if (!check_node.children[curr_key]) {
+          if (current_depth === node_to_insert.key.length) {
+            //If the current depth is equal to the key length, this is the final node, so insert the node to insert
+            check_node.children[curr_key] = node_to_insert;
+            inserted = true;
+          }
+        }
       }
     }
   }
