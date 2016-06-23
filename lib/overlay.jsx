@@ -73,9 +73,12 @@ export default React.createClass({
 
     this.state.checkerLocation = this.props.checkerLocation;
     this.state.squareSize = this.props.squareSize;
+    this.state.boardValues = this.props.boardValues;
 
     //If we updated some of the values - set the state to inactive - wait for a play request
     this.state.solveState = STATE.WAITING;
+    this.state.visitedLocations = [];
+    this.state.nonvisitedLocations = [];
     this.drawCanvas();
   },
 
@@ -136,10 +139,9 @@ export default React.createClass({
    */
   run() {
     //Get the result back from the algorithm
-    console.log("ALGORITHM: ");
     let result = this.state.algorithm.next().value;
     let checker = this.state.checkerLocation;
-    console.log(result);
+    console.log(`Yielded Result: ` + JSON.stringify(result, null, 2));
 
     if (result.completed) {
       //Finish
@@ -149,11 +151,17 @@ export default React.createClass({
       //Set the State of the value (X or O#) if value is set
       if (result.value) {
         if (result.value === "O") {
+          //Remove any visited locations from the either array
+          _.remove(this.state.nonvisitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
+          _.remove(this.state.visitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
           this.state.nonvisitedLocations.push({
             x: result.x + checker.x,
             y: result.y + checker.y
           })
         } else if (result.value === "X") {
+          //Remove any visited locations from the either array
+          _.remove(this.state.nonvisitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
+          _.remove(this.state.visitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
           this.state.visitedLocations.push({
             x: result.x + checker.x,
             y: result.y + checker.y
@@ -163,8 +171,8 @@ export default React.createClass({
 
       //Set the current location being checked with curr.x and curr.y
       this.state.currentLoc = {
-        x: result.x,
-        y: result.y
+        x: result.x + checker.x,
+        y: result.y + checker.y
       };
     }
     this.drawCanvas();

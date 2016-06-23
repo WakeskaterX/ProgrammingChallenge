@@ -1,5 +1,6 @@
 import {getKey, getValuesFromKey, getDepth} from './helper';
 import {Node} from './tree_node';
+import _ from 'lodash';
 
 module.exports = {
   'algorithm_solve_for_checker': solveChecker2
@@ -32,7 +33,7 @@ module.exports = {
  *
  */
 function* solveChecker2(boardValues, checkerLocation, boardSize) {
-  let values = boardValues; //Direct Reference to the Values
+  let values = boardValues;
   let checker = checkerLocation;
   let size = boardSize;
   let number_moves = 0;
@@ -49,9 +50,9 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
   //Setup the four quadrants
   //the child at 0 - (0,0) is the root
   active.children['0'] = root;
-  active.children['1'] = new Node(-1, 0);
-  active.children['2'] = new Node(0, -1);
-  active.children['3'] = new Node(-1, -1);
+  active.children['1'] = new Node(0, -1, root);
+  active.children['2'] = new Node(-1, 0, root);
+  active.children['3'] = new Node(-1, -1, root);
 
   active.visit();
   number_moves++;
@@ -64,8 +65,11 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
 
   while (true) {
     //First get the location and check if the node exists
+    abs_loc = {x: checker.x + curr_loc.x, y: checker.y + curr_loc.y};
     let dir = values[abs_loc.y][abs_loc.x]
     let move = getMovement(dir);
+
+    console.log(move, dir);
 
     curr_loc.x += move.x;
     curr_loc.y += move.y;
@@ -90,10 +94,13 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     let max_depth = key_to_check.length;
 
     //Create a link to active so we can traverse the tree without changing what active is pointing to
-    let check_node = active;
+    let check_node = root;
+
+    console.log(`starting loop to check key ${key_to_check}`);
     while(!done) {
       //Traverse Each depth level - get the key for this depth level
-      var depth_key = key_to_check.substr(0, 1);
+      var depth_key = key_to_check.substr(depth, 1);
+      console.log(`checking key ${depth_key} at depth ${depth}`);
       if (check_node.children[depth_key]) {
         check_node = check_node.children[depth_key];
         depth++;
@@ -105,6 +112,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
 
         //If the key matches - this is the target node
         if (check_node.key === key_to_check) {
+          console.log('new check node key matches full key!');
           target_node = check_node;
           exists = true;
           done = true;
@@ -113,6 +121,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
           done = true;
         }
       } else {
+        console.log(`no key at depth ${depth}`)
         //We couldn't find it
         done = true;
       }
@@ -153,14 +162,17 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
         console.log("Checking the current key", curr_key, " against ", node_to_insert.key);
         //If the currently checked node doesn't have a child with the current key value, lets add a node
         if (!check_node.children[curr_key]) {
-          if (current_depth === node_to_insert.key.length - 1) {
+          if (current_depth === node_to_insert.key.length) {
+            console.log(`Inserting New Node! ${curr_key} at depth: ${current_depth}`)
             //If the current depth is equal to the key length, this is the final node, so insert the node to insert
             check_node.children[curr_key] = node_to_insert;
             inserted = true;
+            break;
           } else {
             let partial_key = node_to_insert.key.substr(0, current_depth + 2);
             let new_val = getValuesFromKey(partial_key);
             let new_child = new Node(new_val.x, new_val.y);
+            console.log(`Creating new child at ${new_val.x}, ${new_val.y} on the current key: "${curr_key}" at depth: ${current_depth}`)
             check_node.children[curr_key] = new_child;
             new_child.parent = check_node;
 
@@ -175,7 +187,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
             };
           }
         } else {
-          console.log("Updating Check Node");
+          console.log(`Updating Check Node with current_key ${curr_key} at depth: ${current_depth}`);
           //Otherwise if it does have a node, set the check node to that node and continue
           check_node = check_node.children[curr_key];
           console.log(check_node);

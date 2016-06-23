@@ -7,14 +7,14 @@ import {getKey} from './helper';
  * @param {number} y
  * @param {string} value
  */
-function Node(x, y, key) {
+function Node(x, y, parent) {
   this.x = x;
   this.y = y;
   this.key = getKey(x, y);
   this.visited = false;
 
   //Parent Node
-  this.parent = null;
+  this.parent = parent || null;
 
   //Children is how we traverse the tree
   this.children = {
