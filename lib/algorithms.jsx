@@ -47,12 +47,12 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
   let root = new Node(curr_loc.x, curr_loc.y);
   let active = root;
 
-  //Setup the four quadrants
+  //Setup the four quadrants (if they're on the board)
   //the child at 0 - (0,0) is the root
   active.children['0'] = root;
-  active.children['1'] = new Node(0, -1, root);
-  active.children['2'] = new Node(-1, 0, root);
-  active.children['3'] = new Node(-1, -1, root);
+  if (!isOffBoard({x: checker.x,     y: checker.y + -1 }, size)) active.children['1'] = new Node(0, -1, root);
+  if (!isOffBoard({x: checker.x - 1, y: checker.y },      size)) active.children['2'] = new Node(-1, 0, root);
+  if (!isOffBoard({x: checker.x - 1, y: checker.y + -1 }, size)) active.children['3'] = new Node(-1, -1, root);
 
   active.visit();
   number_moves++;
@@ -169,7 +169,7 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
             inserted = true;
             break;
           } else {
-            let partial_key = node_to_insert.key.substr(0, current_depth + 2);
+            let partial_key = node_to_insert.key.substr(0, current_depth + 1);
             let new_val = getValuesFromKey(partial_key);
             let new_child = new Node(new_val.x, new_val.y);
             console.log(`Creating new child at ${new_val.x}, ${new_val.y} on the current key: "${curr_key}" at depth: ${current_depth}`)
