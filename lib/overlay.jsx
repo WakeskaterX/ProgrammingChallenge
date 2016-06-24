@@ -141,7 +141,6 @@ export default React.createClass({
     //Get the result back from the algorithm
     let result = this.state.algorithm.next().value;
     let checker = this.state.checkerLocation;
-    console.log(`Yielded Result: ` + JSON.stringify(result, null, 2));
 
     if (result.completed) {
       //Finish
