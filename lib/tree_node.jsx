@@ -12,6 +12,7 @@ function Node(x, y, parent) {
   this.y = y;
   this.key = getKey(x, y);
   this.visited = false;
+  this.is_root = false;
 
   //Parent Node
   this.parent = parent || null;

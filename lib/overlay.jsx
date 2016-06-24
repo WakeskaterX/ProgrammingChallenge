@@ -153,11 +153,10 @@ export default React.createClass({
         if (result.value === "O") {
           //Remove any visited locations from the either array
           _.remove(this.state.nonvisitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
-          _.remove(this.state.visitedLocations, {x: result.x + checker.x, y: result.y + checker.y });
           this.state.nonvisitedLocations.push({
             x: result.x + checker.x,
             y: result.y + checker.y
-          })
+          });
         } else if (result.value === "X") {
           //Remove any visited locations from the either array
           _.remove(this.state.nonvisitedLocations, {x: result.x + checker.x, y: result.y + checker.y });

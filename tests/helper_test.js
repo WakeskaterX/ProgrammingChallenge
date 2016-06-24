@@ -10,12 +10,15 @@ describe('Helper Tests', function() {
   it('should wrap and unwrap keys from coordinates', function() {
     let assertions = [
       {x: 0,    y: 0,   key: '0' },
+      {x: -1,   y: 0,   key: '2'},
+      {x: 0,    y: -1,  key: '1'},
       {x: -4,   y: -1,  key: '311'},
       {x: 20,   y: -10, key: '130310'}
     ];
 
     assertions.forEach(function(assertion) {
       var created_key = helper.getKey(assertion.x, assertion.y);
+      console.log(`checking ${created_key} against ${assertion.key}`);
       expect(created_key).to.equal(assertion.key);
 
       var created_coords = helper.getValuesFromKey(created_key);

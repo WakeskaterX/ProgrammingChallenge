@@ -45,15 +45,19 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
 
   //Create Root Node
   let root = new Node(curr_loc.x, curr_loc.y);
-  let active = root;
+  root.is_root = true;
 
-  //Setup the four quadrants (if they're on the board)
-  //the child at 0 - (0,0) is the root
-  active.children['0'] = root;
-  if (!isOffBoard({x: checker.x,     y: checker.y + -1 }, size)) active.children['1'] = new Node(0, -1, root);
-  if (!isOffBoard({x: checker.x - 1, y: checker.y },      size)) active.children['2'] = new Node(-1, 0, root);
-  if (!isOffBoard({x: checker.x - 1, y: checker.y + -1 }, size)) active.children['3'] = new Node(-1, -1, root);
+  root.children['0'] = new Node(0, 0, root);
+  if (!isOffBoard({x: checker.x,     y: checker.y - 1 }, size))  root.children['1'] = new Node(0, -1, root);
+  if (!isOffBoard({x: checker.x - 1, y: checker.y },      size)) root.children['2'] = new Node(-1, 0, root);
+  if (!isOffBoard({x: checker.x - 1, y: checker.y - 1 }, size))  root.children['3'] = new Node(-1, -1, root);
 
+  //Remove the Root Key -- we should never be using this to check keys -- also setting to an empty string helps
+  //for length checks if we're at the root
+  root.key = "";
+
+  //Move to Roots 0 Child
+  let active = root.children['0'];
   active.visit();
   number_moves++;
 
@@ -63,13 +67,12 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
     value: 'X' //Root has been visited
   };
 
-  while (true) {
+  let finished = false;
+  while (!finished) {
     //First get the location and check if the node exists
     abs_loc = {x: checker.x + curr_loc.x, y: checker.y + curr_loc.y};
     let dir = values[abs_loc.y][abs_loc.x]
     let move = getMovement(dir);
-
-    console.log(move, dir);
 
     curr_loc.x += move.x;
     curr_loc.y += move.y;
@@ -84,45 +87,63 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
         status: 'success',
         description: `Checker exited the board in ${number_moves} moves!`
       }
+      finished = true;
+      break;
     }
 
     //Traverse Tree to see if node exists
     let done = false, exists = false, target_node;
+
+    //First get the NEW key to see if it already exists in our tree somewhere
+    //The current location (active) might be on a different branch so get the closest PARENT that
+    //matches the path
     let key_to_check = getKey(curr_loc.x, curr_loc.y);
-    let depth = 0;
 
-    let max_depth = key_to_check.length;
+    //set check node to nearest parent (up to the root)
+    let check_node = getNearestParent(active, key_to_check) || root;
 
-    //Create a link to active so we can traverse the tree without changing what active is pointing to
-    let check_node = root;
+    //If the check node IS the parent - which can happen if you move from say 23 => 2
+    //Then skip looking for it:
+    if (check_node.key === key_to_check) {
+      done = true;
+      exists = true;
+      target_node = check_node;
+    }
 
-    console.log(`starting loop to check key ${key_to_check}`);
+    //Set Starting Depth.  This is the SLOT in the KEY that we will check the check_node to see if it exists
+    //For example, if key_to_check is 232 and our existing node is 2  we'd want to get '3' as the value, so depth would be 1
+    //If key_to_check is 1 and the check node key is 0 we'd want a depth zero because we're checking against the root
+    let depth = check_node.key.length;
+
     while(!done) {
       //Traverse Each depth level - get the key for this depth level
+      //The Depth Key is the key to check's location that we want to check for
+      //For example, if we're checking key:  232 and we're checking against node 23... we want a depth of 2 and a depth_key of 2
       var depth_key = key_to_check.substr(depth, 1);
-      console.log(`checking key ${depth_key} at depth ${depth}`);
+
+      //If the check node HAS a child with the depth key, we need to check that child.
       if (check_node.children[depth_key]) {
         check_node = check_node.children[depth_key];
         depth++;
         number_moves++;
+
         yield {
           x: check_node.x,
-          y: check_node.y
-        }
+          y: check_node.y,
+          value: !check_node.visited ? 'O': undefined
+        };
 
-        //If the key matches - this is the target node
+        //If the new child of the check node has a key that matches our key to check
+        //We found the node we were looking for - so set exists and done to true, and set it as our target
         if (check_node.key === key_to_check) {
-          console.log('new check node key matches full key!');
           target_node = check_node;
           exists = true;
           done = true;
-        } else if (depth > max_depth) {
-          //If we somehow go past the max_depth - exit
-          done = true;
         }
       } else {
-        console.log(`no key at depth ${depth}`)
-        //We couldn't find it
+        //If the check_node parent didn't have this depth key
+        //It means the node doesn't exist in the tree yet
+        exists = false;
         done = true;
       }
     }
@@ -136,12 +157,17 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
           status: 'failure',
           description: `Path intercepted itself in  ${number_moves} moves!`
         }
+        finished = true;
+        break;
       } else {
-        //Link target_node to active node and set to visited
+        //If the node exists but it is NOT visited
+        //Link to the active node as neighbors
+        //And then visit it, and then set active to the new node
         active.neighbors[dir] = target_node;
         target_node.neighbors[swapDirection(dir)] = active;
         target_node.visit();
         active = target_node;
+
         //Yield new active node
         number_moves++;
         yield {
@@ -151,46 +177,50 @@ function* solveChecker2(boardValues, checkerLocation, boardSize) {
         };
       }
     } else {
-      //Create a new NODE and set as active
+      //Otherwise if we have NOT found the node we need to create a brand new node, and insert it into
+      //the tree.  First create a new node at the target X and Y location
       let inserted = false;
       let node_to_insert = new Node(curr_loc.x, curr_loc.y);
-      let current_depth = 0;
-      let check_node = root;
+
+      //Similar to before, we want the nearest parent to the active node so we can recurse to find the correct spot to insert the
+      //target node_to_insert
+      let check_node = getNearestParent(active, node_to_insert.key);
+      let current_depth = check_node.key.length;
+
+      //Start looping through the tree
       while (!inserted) {
-        //Start at the Root and Check
+        //Similar to the depth key, we want the curr_key which is the new nodes access key to the tree
         let curr_key = node_to_insert.key.substr(current_depth, 1);
-        console.log("Checking the current key", curr_key, " against ", node_to_insert.key);
+
         //If the currently checked node doesn't have a child with the current key value, lets add a node
         if (!check_node.children[curr_key]) {
-          if (current_depth === node_to_insert.key.length) {
-            console.log(`Inserting New Node! ${curr_key} at depth: ${current_depth}`)
+          //If the current depth is 1 less than the node_to_inserts key length - that means we
+          //Are at the proper depth in the tree and should insert our key here
+          if (current_depth === node_to_insert.key.length - 1) {
             //If the current depth is equal to the key length, this is the final node, so insert the node to insert
             check_node.children[curr_key] = node_to_insert;
+            node_to_insert.parent = check_node;
             inserted = true;
             break;
           } else {
-            let partial_key = node_to_insert.key.substr(0, current_depth + 1);
+            let partial_key = check_node.key + curr_key;
             let new_val = getValuesFromKey(partial_key);
-            let new_child = new Node(new_val.x, new_val.y);
-            console.log(`Creating new child at ${new_val.x}, ${new_val.y} on the current key: "${curr_key}" at depth: ${current_depth}`)
+            let new_child = new Node(new_val.x, new_val.y, check_node);
             check_node.children[curr_key] = new_child;
-            new_child.parent = check_node;
 
             //Set the Check node to the new child and enter that node
             check_node = new_child;
             current_depth++;
             number_moves++;
-            yield { //non-visited node
+            yield {
               x: check_node.x,
               y: check_node.y,
               value: "O"
             };
           }
         } else {
-          console.log(`Updating Check Node with current_key ${curr_key} at depth: ${current_depth}`);
           //Otherwise if it does have a node, set the check node to that node and continue
           check_node = check_node.children[curr_key];
-          console.log(check_node);
           current_depth++;
           number_moves++;
           yield {
@@ -240,6 +270,11 @@ function getMovement(direction) {
   }
 }
 
+/**
+ * Takes a direction and reverses the key
+ * @param {string} direction
+ * @returns {string}
+ */
 function swapDirection(direction) {
   switch (direction) {
     case 'U': return 'D';
@@ -247,6 +282,33 @@ function swapDirection(direction) {
     case 'L': return 'R';
     case 'R': return 'L';
   }
+}
+
+/**
+ * Get Nearest Parent
+ * Takes a Node, and given a key determines how many levels it needs to go to have a common parent
+ * @param {Node} active_node
+ * @param {string} key_to_check
+ * @returns {Node}
+ */
+function getNearestParent(active_node, key_to_check) {
+  console.log(`Getting nearest parent for keys ${active_node.key} and ${key_to_check}`);
+  let active_key = active_node.key;
+  let active_depth = active_key.length;
+  let matching_depth = 0;
+  let max_length = Math.max(key_to_check.length, active_key.length);
+  for (let i = 0; i < max_length; i++) {
+    if (key_to_check[i] === active_key[i]) matching_depth++;
+    else break;
+  }
+
+  //Recurse up the active node to each parent to get the closest common parent
+  let curr = active_node;
+  console.log(`Number of parents to recurse to: ${active_depth - matching_depth}`);
+  for (let j = 0; j < (active_depth - matching_depth); j++) {
+    curr = curr.parent;
+  }
+  return curr;
 }
 
 /**
